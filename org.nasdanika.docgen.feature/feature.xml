@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.nasdanika.docgen.feature"
+      label="Documentation Generator Feature"
+      version="0.1.0.qualifier">
+
+   <description>
+      Documentation generation - static HTML, Eclipse Help and other formats.
+   </description>
+
+   <copyright>
+      Property of Nasdanika LLC, all rights reserved.
+   </copyright>
+
+   <license url="https://www.eclipse.org/legal/epl-v10.html">
+      Eclipse public license
+   </license>
+
+   <url>
+      <discovery label="Nasdanika Foundation Server" url="http://www.nasdanika.org/products/server/repository"/>
+      <discovery label="Nasdanika Help Extensions" url="http://www.nasdanika.org/products/help/repository"/>
+   </url>
+
+   <plugin
+         id="org.nasdanika.docgen"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.nasdanika.docgen.emf"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>

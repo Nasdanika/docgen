@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>org.nasdanika.docgen.repository</artifactId>
+	<name>Nasdanika Documentation Generator Repository</name>
+	<packaging>eclipse-repository</packaging>
+	<parent>
+		<groupId>org.nasdanika.docgen</groupId>
+		<artifactId>org.nasdanika.docgen.parent</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+		<relativePath>../org.nasdanika.docgen.parent</relativePath>
+	</parent>
+	<build>
+		<extensions>
+			<!-- Enabling the use of FTP -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ftp</artifactId>
+				<version>3.0.0</version>
+			</extension>
+		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-site-plugin</artifactId>
+			    <version>3.7.1</version>
+			    <configuration>
+			        <skip>false</skip>
+			        <skipDeploy>false</skipDeploy>
+			    </configuration>
+			</plugin>		
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>pre-site</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/site</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/target</directory>
+									<includes>repository/**</includes>
+									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<directory>${basedir}/../org.nasdanika.docgen.parent/target/site</directory>
+									<filtering>false</filtering>
+								</resource>								
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-repository-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<includeAllDependencies>true</includeAllDependencies>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<distributionManagement>
+		<site>
+			<id>nasdanika-org</id>
+			<url>ftp://${env.FTP_SERVER}/docgen</url>
+		</site>
+	</distributionManagement>	
+	
+</project>

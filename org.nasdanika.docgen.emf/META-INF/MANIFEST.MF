@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Docgen EMF
+Bundle-SymbolicName: org.nasdanika.docgen.emf;singleton:=true
+Bundle-Version: 0.1.0.qualifier
+Require-Bundle: org.nasdanika.docgen;bundle-version="0.1.0",
+ org.eclipse.emf.edit;bundle-version="2.13.0",
+ org.nasdanika.html;bundle-version="1.2.0",
+ org.apache.commons.text;bundle-version="1.4.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: org.nasdanika.docgen.emf
+Automatic-Module-Name: org.nasdanika.docgen.emf
