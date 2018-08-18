@@ -11,6 +11,8 @@ import java.util.function.Function;
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -117,6 +119,12 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 				}				
 				contentFragment.content(header);
 				contentFragment.content(TagName.div.create("<B>EClass: </B> ", eObject.eClass().getName())); // TODO - link.
+				
+				EReference containmentReference = eObject.eContainmentFeature();
+				if (containmentReference != null) {
+					contentFragment.content(TagName.div.create("<B>Role:</B> ", ((EStructuralFeature) containmentReference).getName()));			
+				}
+				
 				// TODO - description - special treatment for annotated features/properties.
 				if (categories.isEmpty()) {
 					for (IItemPropertyDescriptor pd: uncategorized) {
@@ -184,11 +192,11 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 		ret.content(TagName.h3.create(StringEscapeUtils.escapeHtml4(propertyDescriptor.getDisplayName(eObject))));
 		String description = propertyDescriptor.getDescription(eObject);
 		if (!CodegenUtil.isBlank(description)) {
-			ret.content(TagName.div.create("<B>Description:</B> ", description));
+			ret.content(htmlFactory.well(description).small());
 		}
 //		Object feature = propertyDescriptor.getFeature(eObject);
-//		if (feature != null) {
-//			ret.content("<B>Feature:</B> ", feature, "<P/>");			
+//		if (feature instanceof EStructuralFeature) {
+//			ret.content("<B>Role:</B> ", ((EStructuralFeature) feature).getName(), "<P/>");			
 //		}
 		
 		if (value instanceof IItemPropertySource) {
@@ -217,7 +225,7 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 	 * @return
 	 */
 	protected Object renderPropertyValue(IItemPropertyDescriptor propertyDescriptor, IItemPropertySource propertySource, Object value) {		
-		return String.valueOf(value); // TODO.
+		return TagName.div.create(StringEscapeUtils.escapeHtml4(String.valueOf(value))).style().whiteSpace().pre(); // TODO.
 	}
 
 }
