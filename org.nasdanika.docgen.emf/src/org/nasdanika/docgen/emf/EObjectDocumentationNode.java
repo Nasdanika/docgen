@@ -1,6 +1,7 @@
 package org.nasdanika.docgen.emf;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,12 @@ import org.nasdanika.html.Tabs;
 import org.nasdanika.html.Tag;
 import org.nasdanika.html.Tag.TagName;
 
+import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.options.MutableDataSet;
+
 /**
  * Base class for {@link EObject} documentation nodes. 
  * It uses {@link AdapterFactory} to obtain label and icon from {@link IItemLabelProvider}, children from {@link ITreeItemContentProvider}, and properties from {@link IItemPropertySource}.
@@ -48,6 +55,14 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 	
 	protected EObject eObject;
 	protected AdapterFactory adapterFactory;
+	
+    Parser markdownParser;
+    HtmlRenderer markdownRenderer;
+
+//    // You can re-use parser and renderer instances
+//    Node document = parser.parse("This is *Sparta*");
+//    String html = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
+
 
 	public EObjectDocumentationNode(EObject eObject) {
 		ResourceSet resourceSet = eObject.eResource().getResourceSet();
@@ -70,7 +85,13 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 					}					
 				}
 			}
-		}		
+		}
+		
+		// Markdown
+	    MutableDataSet markdownOptions = new MutableDataSet();
+	    markdownOptions.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
+	    markdownParser = Parser.builder(markdownOptions).build();
+	    markdownRenderer = HtmlRenderer.builder(markdownOptions).build();
 	}
 	
 	@Override
@@ -192,7 +213,8 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 		ret.content(TagName.h3.create(StringEscapeUtils.escapeHtml4(propertyDescriptor.getDisplayName(eObject))));
 		String description = propertyDescriptor.getDescription(eObject);
 		if (!CodegenUtil.isBlank(description)) {
-			ret.content(htmlFactory.well(description).small());
+	        String html = markdownRenderer.render(markdownParser.parse(description));  
+			ret.content(htmlFactory.well(html).small());
 		}
 //		Object feature = propertyDescriptor.getFeature(eObject);
 //		if (feature instanceof EStructuralFeature) {
