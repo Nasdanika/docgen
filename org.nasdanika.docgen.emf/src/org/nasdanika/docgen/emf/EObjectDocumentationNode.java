@@ -11,9 +11,10 @@ import java.util.function.Function;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.ecore.EAnnotation;
+import org.eclipse.emf.ecore.EModelElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -35,6 +36,7 @@ import org.nasdanika.html.Bootstrap.Style;
 import org.nasdanika.html.Fragment;
 import org.nasdanika.html.HTMLFactory;
 import org.nasdanika.html.ListGroup;
+import org.nasdanika.html.Table;
 import org.nasdanika.html.Tabs;
 import org.nasdanika.html.Tag;
 import org.nasdanika.html.Tag.TagName;
@@ -56,14 +58,15 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 	protected EObject eObject;
 	protected AdapterFactory adapterFactory;
 	
+	public static final String ECORE_DOC_ANNOTATION_SOURCE = "http://www.eclipse.org/emf/2002/GenModel";		
+	
     Parser markdownParser;
     HtmlRenderer markdownRenderer;
 
 //    // You can re-use parser and renderer instances
 //    Node document = parser.parse("This is *Sparta*");
 //    String html = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
-
-
+       
 	public EObjectDocumentationNode(EObject eObject) {
 		ResourceSet resourceSet = eObject.eResource().getResourceSet();
 		if (resourceSet instanceof IEditingDomainProvider) {
@@ -92,6 +95,30 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 	    markdownOptions.set(Parser.EXTENSIONS, Arrays.asList(TablesExtension.create(), StrikethroughExtension.create()));
 	    markdownParser = Parser.builder(markdownOptions).build();
 	    markdownRenderer = HtmlRenderer.builder(markdownOptions).build();
+	}
+	
+	/**
+	 * Generates HTML documentation for a model element.
+	 * @param docRoute
+	 * @param baseURI
+	 * @param urlPrefix
+	 * @param modelElement
+	 * @return
+	 */
+	public String getModelDocumentation(EModelElement modelElement) {
+		EAnnotation docAnn = modelElement.getEAnnotation(ECORE_DOC_ANNOTATION_SOURCE);
+		if (docAnn==null) {
+			return null;
+		}
+		String markdown = docAnn.getDetails().get("documentation");
+		if (CodegenUtil.isBlank(markdown)) {
+			return null;
+		}
+		return markdownToHtml(markdown);		
+	}
+	
+	public String markdownToHtml(String markdown) {
+        return markdownRenderer.render(markdownParser.parse(markdown));  
 	}
 	
 	@Override
@@ -138,12 +165,16 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 				} else {
 					header.content(getLabel());
 				}				
-				contentFragment.content(header);
-				contentFragment.content(TagName.div.create("<B>EClass: </B> ", eObject.eClass().getName())); // TODO - link.
+				contentFragment.content(header);				
+				Table headerTable = htmlFactory.table();
+				contentFragment.content(headerTable);
+				String eClassDocumentation = getModelDocumentation(eObject.eClass());
+				headerTable.row("<B>EClass</B> ", eObject.eClass().getName(), CodegenUtil.isBlank(eClassDocumentation) ? "" : eClassDocumentation); // TODO - link.
 				
 				EReference containmentReference = eObject.eContainmentFeature();
 				if (containmentReference != null) {
-					contentFragment.content(TagName.div.create("<B>Role:</B> ", ((EStructuralFeature) containmentReference).getName()));			
+					String containmentReferenceDocumentation = getModelDocumentation(containmentReference);
+					headerTable.row("<B>Role</B> ", containmentReference.getName(), CodegenUtil.isBlank(containmentReferenceDocumentation) ? "" : containmentReferenceDocumentation);			
 				}
 				
 				// TODO - description - special treatment for annotated features/properties.
@@ -211,10 +242,10 @@ public class EObjectDocumentationNode extends DocumentationNodeImpl {
 		HTMLFactory htmlFactory = HTMLFactory.INSTANCE;
 		Fragment ret = htmlFactory.fragment(); // TODO - content type?
 		ret.content(TagName.h3.create(StringEscapeUtils.escapeHtml4(propertyDescriptor.getDisplayName(eObject))));
-		String description = propertyDescriptor.getDescription(eObject);
-		if (!CodegenUtil.isBlank(description)) {
-	        String html = markdownRenderer.render(markdownParser.parse(description));  
-			ret.content(htmlFactory.well(html).small());
+		Object feature = propertyDescriptor.getFeature(eObject);
+		if (feature instanceof EModelElement) {
+			String description = getModelDocumentation((EModelElement) feature);
+			ret.content(htmlFactory.well(description).small());
 		}
 //		Object feature = propertyDescriptor.getFeature(eObject);
 //		if (feature instanceof EStructuralFeature) {
